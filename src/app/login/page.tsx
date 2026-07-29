@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { BrandLogo } from "@/components/layout/brand-logo";
+import { supabase } from "@/lib/supabase/client";
 
 const schema = z.object({
   emailOrPhone: z.string().min(5, "Enter email or phone"),
@@ -31,10 +32,39 @@ export default function LoginPage() {
     defaultValues: { remember: true },
   });
 
-  const onSubmit = async () => {
-    await new Promise((r) => setTimeout(r, 900));
+  const onSubmit = async (values: FormValues) => {
+    const email = values.emailOrPhone.trim();
+
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password: values.password,
+    });
+
+    if (error) {
+      toast.error(error.message || "Invalid login details");
+      return;
+    }
+
+    const userId = data.user?.id;
+    let role = "USER";
+
+    if (userId) {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", userId)
+        .maybeSingle();
+
+      role = profile?.role ?? "USER";
+    }
+
     toast.success("Welcome back");
-    router.push("/profile");
+
+    if (role === "ADMIN" || role === "SUPER_ADMIN" || role === "STAFF") {
+      router.push("/admin");
+    } else {
+      router.push("/profile");
+    }
   };
 
   return (
@@ -56,7 +86,12 @@ export default function LoginPage() {
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div>
             <Label htmlFor="emailOrPhone">Email or phone</Label>
-            <Input id="emailOrPhone" {...register("emailOrPhone")} />
+            <Input
+              id="emailOrPhone"
+              type="email"
+              placeholder="admin@manueldataplug.com"
+              {...register("emailOrPhone")}
+            />
             {errors.emailOrPhone && (
               <p className="mt-1 text-xs text-red-600">
                 {errors.emailOrPhone.message}

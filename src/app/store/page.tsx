@@ -1,13 +1,20 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
 import { StoreClient } from "@/components/store/store-client";
+import { fetchAllPackagesFromDb } from "@/lib/supabase/packages";
+import { packages as fallbackPackages } from "@/lib/data/packages";
 
 export const metadata: Metadata = {
   title: "Store Front",
   description: "Browse affordable MTN, Telecel and AirtelTigo data packages.",
 };
 
-export default function StorePage() {
+export const dynamic = "force-dynamic";
+
+export default async function StorePage() {
+  let packages = await fetchAllPackagesFromDb();
+  if (packages.length === 0) packages = fallbackPackages;
+
   return (
     <Suspense
       fallback={
@@ -21,7 +28,7 @@ export default function StorePage() {
         </div>
       }
     >
-      <StoreClient />
+      <StoreClient initialPackages={packages} />
     </Suspense>
   );
 }

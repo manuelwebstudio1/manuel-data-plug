@@ -6,7 +6,7 @@ import { motion } from "framer-motion";
 import { Search, SlidersHorizontal } from "lucide-react";
 import { toast } from "sonner";
 import {
-  packages,
+  packages as fallbackPackages,
   networks,
   type Network,
   type PackageItem,
@@ -18,10 +18,18 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 
-export function StoreClient() {
+export function StoreClient({
+  initialPackages,
+}: {
+  initialPackages?: PackageItem[];
+}) {
   const searchParams = useSearchParams();
   const router = useRouter();
   const setPackage = useCart((s) => s.setPackage);
+  const catalog =
+    initialPackages && initialPackages.length > 0
+      ? initialPackages
+      : fallbackPackages;
 
   const initialNetwork = (searchParams.get("network") as Network) || "All";
   const initialCategory = searchParams.get("category") || "all";
@@ -36,7 +44,7 @@ export function StoreClient() {
   );
 
   const filtered = useMemo(() => {
-    let list = [...packages];
+    let list = [...catalog];
     if (network !== "All") list = list.filter((p) => p.network === network);
     if (category !== "all")
       list = list.filter((p) => p.category === category);
@@ -53,7 +61,7 @@ export function StoreClient() {
     else if (sort === "price-desc") list.sort((a, b) => b.price - a.price);
     else list.sort((a, b) => Number(b.popular) - Number(a.popular));
     return list;
-  }, [network, category, query, sort]);
+  }, [catalog, network, category, query, sort]);
 
   const buy = (pkg: PackageItem) => {
     setPackage(pkg);
