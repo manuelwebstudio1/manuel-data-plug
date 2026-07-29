@@ -3,6 +3,20 @@ export type NetworkCode = "MTN" | "TELECEL" | "AIRTELTIGO";
 export type Database = {
   public: {
     Tables: {
+      profiles: {
+        Row: {
+          id: string;
+          email: string | null;
+          phone: string | null;
+          username: string | null;
+          full_name: string | null;
+          role: "USER" | "STAFF" | "ADMIN" | "SUPER_ADMIN";
+          referral_code: string | null;
+          suspended: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+      };
       networks: {
         Row: {
           id: string;

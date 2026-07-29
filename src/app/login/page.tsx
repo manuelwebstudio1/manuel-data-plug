@@ -55,7 +55,8 @@ export default function LoginPage() {
         .eq("id", userId)
         .maybeSingle();
 
-      role = profile?.role ?? "USER";
+      const profileRole = (profile as { role?: string } | null)?.role;
+      role = profileRole ?? "USER";
     }
 
     toast.success("Welcome back");

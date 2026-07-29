@@ -1,11 +1,19 @@
 "use client";
 
-import { demoOrders } from "@/lib/data/packages";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
+
+const orders: {
+  id: string;
+  package: string;
+  phone: string;
+  status: string;
+  date: string;
+  amount: number;
+}[] = [];
 
 export default function AdminOrdersPage() {
   return (
@@ -44,29 +52,42 @@ export default function AdminOrdersPage() {
               </tr>
             </thead>
             <tbody>
-              {demoOrders.map((o) => (
-                <tr key={o.id} className="border-b border-slate-50">
-                  <td className="px-4 py-3 font-mono text-xs">{o.id}</td>
-                  <td className="px-4 py-3">{o.package}</td>
-                  <td className="px-4 py-3">{o.phone}</td>
-                  <td className="px-4 py-3">
-                    <Badge>{o.status}</Badge>
-                  </td>
-                  <td className="px-4 py-3 text-slate-500">{formatDate(o.date)}</td>
-                  <td className="px-4 py-3 font-semibold">
-                    {formatCurrency(o.amount)}
-                  </td>
-                  <td className="px-4 py-3">
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => toast.message(`Refund queued for ${o.id}`)}
-                    >
-                      Refund
-                    </Button>
+              {orders.length === 0 ? (
+                <tr>
+                  <td
+                    colSpan={7}
+                    className="px-4 py-10 text-center text-sm text-slate-500"
+                  >
+                    No orders yet.
                   </td>
                 </tr>
-              ))}
+              ) : (
+                orders.map((o) => (
+                  <tr key={o.id} className="border-b border-slate-50">
+                    <td className="px-4 py-3 font-mono text-xs">{o.id}</td>
+                    <td className="px-4 py-3">{o.package}</td>
+                    <td className="px-4 py-3">{o.phone}</td>
+                    <td className="px-4 py-3">
+                      <Badge>{o.status}</Badge>
+                    </td>
+                    <td className="px-4 py-3 text-slate-500">
+                      {formatDate(o.date)}
+                    </td>
+                    <td className="px-4 py-3 font-semibold">
+                      {formatCurrency(o.amount)}
+                    </td>
+                    <td className="px-4 py-3">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => toast.message(`Refund queued for ${o.id}`)}
+                      >
+                        Refund
+                      </Button>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>

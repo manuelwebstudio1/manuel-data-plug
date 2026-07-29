@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -39,10 +40,15 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex min-h-screen bg-slate-100">
       <aside className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col border-r border-slate-200 bg-[#0A2A66] text-white lg:flex">
-        <div className="flex h-16 items-center gap-2 border-b border-white/10 px-5">
-          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-white text-sm font-bold text-[#0A2A66]">
-            M
-          </span>
+        <div className="flex h-16 items-center gap-2.5 border-b border-white/10 px-5">
+          <Image
+            src="/logo.png"
+            alt="Manuel Data Plug"
+            width={36}
+            height={36}
+            className="shrink-0 rounded-full object-cover ring-1 ring-white/20"
+            priority
+          />
           <div>
             <p className="text-sm font-semibold">Manuel Admin</p>
             <p className="text-[10px] text-sky-200">Control Center</p>
@@ -84,9 +90,18 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
 
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="sticky top-0 z-20 flex h-14 items-center justify-between border-b border-slate-200 bg-white/90 px-4 backdrop-blur lg:px-6">
-          <p className="font-[family-name:var(--font-poppins)] text-sm font-semibold text-[#0A2A66] lg:hidden">
-            Admin
-          </p>
+          <div className="flex items-center gap-2 lg:hidden">
+            <Image
+              src="/logo.png"
+              alt="Manuel Data Plug"
+              width={28}
+              height={28}
+              className="rounded-full object-cover"
+            />
+            <p className="font-[family-name:var(--font-poppins)] text-sm font-semibold text-[#0A2A66]">
+              Admin
+            </p>
+          </div>
           <p className="hidden text-sm text-slate-500 lg:block">
             Manuel Data Plug · Operations
           </p>

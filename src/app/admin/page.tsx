@@ -14,20 +14,27 @@ import { Badge } from "@/components/ui/badge";
 import { formatCurrency } from "@/lib/utils";
 
 const revenue = [
-  { day: "Mon", amount: 420 },
-  { day: "Tue", amount: 580 },
-  { day: "Wed", amount: 510 },
-  { day: "Thu", amount: 740 },
-  { day: "Fri", amount: 890 },
-  { day: "Sat", amount: 960 },
-  { day: "Sun", amount: 720 },
+  { day: "Mon", amount: 0 },
+  { day: "Tue", amount: 0 },
+  { day: "Wed", amount: 0 },
+  { day: "Thu", amount: 0 },
+  { day: "Fri", amount: 0 },
+  { day: "Sat", amount: 0 },
+  { day: "Sun", amount: 0 },
 ];
 
 const kpis = [
-  { label: "Today revenue", value: formatCurrency(720) },
-  { label: "Orders today", value: "148" },
-  { label: "Pending verifications", value: "12" },
-  { label: "Active customers", value: "1,862" },
+  { label: "Today revenue", value: formatCurrency(0) },
+  { label: "Orders today", value: "0" },
+  { label: "Pending verifications", value: "0" },
+  { label: "Active customers", value: "0" },
+];
+
+const attention = [
+  { t: "0 payment verifications", s: "Clear" },
+  { t: "0 failed deliveries", s: "Clear" },
+  { t: "0 support tickets", s: "Clear" },
+  { t: "0 stock warnings", s: "Clear" },
 ];
 
 export default function AdminDashboardPage() {
@@ -67,7 +74,7 @@ export default function AdminDashboardPage() {
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" />
                 <XAxis dataKey="day" tick={{ fontSize: 12 }} />
-                <YAxis tick={{ fontSize: 12 }} />
+                <YAxis tick={{ fontSize: 12 }} domain={[0, 100]} />
                 <Tooltip />
                 <Area
                   type="monotone"
@@ -84,18 +91,13 @@ export default function AdminDashboardPage() {
         <Card className="p-5">
           <h2 className="mb-4 font-semibold text-slate-900">Needs attention</h2>
           <ul className="space-y-3 text-sm">
-            {[
-              { t: "12 payment verifications", s: "Pending" },
-              { t: "3 failed deliveries", s: "Review" },
-              { t: "2 support tickets", s: "Open" },
-              { t: "Stock low: MTN 20GB", s: "Warning" },
-            ].map((item) => (
+            {attention.map((item) => (
               <li
                 key={item.t}
                 className="flex items-center justify-between rounded-xl bg-slate-50 px-3 py-2.5"
               >
                 <span>{item.t}</span>
-                <Badge variant="warning">{item.s}</Badge>
+                <Badge variant="success">{item.s}</Badge>
               </li>
             ))}
           </ul>
