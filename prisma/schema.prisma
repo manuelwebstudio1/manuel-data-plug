@@ -1,0 +1,299 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  STAFF
+  ADMIN
+  SUPER_ADMIN
+}
+
+enum OrderStatus {
+  PENDING
+  PROCESSING
+  DELIVERED
+  FAILED
+  REFUNDED
+}
+
+enum PaymentStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum NetworkType {
+  MTN
+  TELECEL
+  AIRTELTIGO
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  phone         String?   @unique
+  username      String?   @unique
+  fullName      String?
+  passwordHash  String?
+  role          Role      @default(USER)
+  emailVerified DateTime?
+  phoneVerified DateTime?
+  image         String?
+  referralCode  String?   @unique
+  referredById  String?
+  suspended     Boolean   @default(false)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  profile           Profile?
+  wallet            Wallet?
+  orders            Order[]
+  transactions      Transaction[]
+  paymentProofs     PaymentVerification[]
+  notifications     Notification[]
+  supportTickets    SupportTicket[]
+  auditLogs         AuditLog[]
+  savedNumbers      SavedNumber[]
+  favouriteBundles  FavouriteBundle[]
+  devices           Device[]
+  referredBy        User?                 @relation("Referrals", fields: [referredById], references: [id])
+  referrals         User[]                @relation("Referrals")
+  accounts          Account[]
+  sessions          Session[]
+
+  @@index([role])
+  @@index([createdAt])
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model Profile {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  bio       String?
+  avatarUrl String?
+  darkMode  Boolean  @default(false)
+  notifySms Boolean  @default(true)
+  notifyEmail Boolean @default(true)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Wallet {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  balance   Decimal  @default(0) @db.Decimal(12, 2)
+  currency  String   @default("GHS")
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Network {
+  id        String      @id @default(cuid())
+  code      NetworkType @unique
+  name      String
+  active    Boolean     @default(true)
+  bundles   Bundle[]
+}
+
+model Bundle {
+  id            String      @id @default(cuid())
+  networkId     String
+  name          String
+  dataSize      String
+  validity      String
+  price         Decimal     @db.Decimal(12, 2)
+  originalPrice Decimal?    @db.Decimal(12, 2)
+  discount      Int?
+  category      String      @default("data")
+  popular       Boolean     @default(false)
+  inStock       Boolean     @default(true)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  network       Network     @relation(fields: [networkId], references: [id])
+  orders        Order[]
+  favourites    FavouriteBundle[]
+
+  @@index([category])
+  @@index([popular])
+}
+
+model Order {
+  id          String      @id @default(cuid())
+  orderCode   String      @unique
+  userId      String
+  bundleId    String?
+  network     NetworkType
+  packageName String
+  phone       String
+  amount      Decimal     @db.Decimal(12, 2)
+  status      OrderStatus @default(PENDING)
+  reference   String?
+  promoCode   String?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  user        User        @relation(fields: [userId], references: [id])
+  bundle      Bundle?     @relation(fields: [bundleId], references: [id])
+  transactions Transaction[]
+  paymentProof PaymentVerification?
+
+  @@index([status])
+  @@index([createdAt])
+}
+
+model Transaction {
+  id        String   @id @default(cuid())
+  userId    String
+  orderId   String?
+  type      String
+  amount    Decimal  @db.Decimal(12, 2)
+  status    String
+  meta      Json?
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+  order     Order?   @relation(fields: [orderId], references: [id])
+
+  @@index([createdAt])
+}
+
+model PaymentVerification {
+  id            String        @id @default(cuid())
+  userId        String
+  orderId       String?       @unique
+  screenshotUrl String?
+  transactionId String
+  reference     String
+  amount        Decimal       @db.Decimal(12, 2)
+  network       String
+  phone         String
+  paidAt        DateTime?
+  status        PaymentStatus @default(PENDING)
+  reviewedById  String?
+  reviewNote    String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  user          User          @relation(fields: [userId], references: [id])
+  order         Order?        @relation(fields: [orderId], references: [id])
+
+  @@index([status])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String?
+  title     String
+  body      String
+  read      Boolean  @default(false)
+  broadcast Boolean  @default(false)
+  createdAt DateTime @default(now())
+  user      User?    @relation(fields: [userId], references: [id])
+}
+
+model SupportTicket {
+  id        String   @id @default(cuid())
+  userId    String
+  subject   String
+  message   String
+  status    String   @default("open")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id])
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  action    String
+  entity    String?
+  meta      Json?
+  ip        String?
+  createdAt DateTime @default(now())
+  user      User?    @relation(fields: [userId], references: [id])
+
+  @@index([createdAt])
+}
+
+model Setting {
+  id    String @id @default(cuid())
+  key   String @unique
+  value Json
+}
+
+model PromoCode {
+  id        String    @id @default(cuid())
+  code      String    @unique
+  discount  Decimal   @db.Decimal(12, 2)
+  percent   Boolean   @default(false)
+  active    Boolean   @default(true)
+  expiresAt DateTime?
+  usageLimit Int?
+  usedCount Int       @default(0)
+}
+
+model SavedNumber {
+  id     String @id @default(cuid())
+  userId String
+  phone  String
+  label  String?
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, phone])
+}
+
+model FavouriteBundle {
+  id       String @id @default(cuid())
+  userId   String
+  bundleId String
+  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bundle   Bundle @relation(fields: [bundleId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, bundleId])
+}
+
+model Device {
+  id         String   @id @default(cuid())
+  userId     String
+  fingerprint String
+  userAgent  String?
+  lastSeenAt DateTime @default(now())
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}

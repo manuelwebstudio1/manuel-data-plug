@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" fill="none">
+  <rect width="400" height="400" fill="#1A237E"/>
+  <path d="M0 210 C80 170 160 250 240 210 C300 180 350 220 400 190 L400 400 L0 400 Z" fill="#E30613"/>
+  <text x="40" y="95" font-family="Arial Black, Arial, sans-serif" font-size="42" font-weight="900" fill="#FFFFFF">airtel</text>
+  <text x="175" y="95" font-family="Arial Black, Arial, sans-serif" font-size="42" font-weight="900" fill="#FFFFFF">Tigo</text>
+  <circle cx="340" cy="78" r="18" fill="#E30613"/>
+  <text x="250" y="340" font-family="Arial, Helvetica, sans-serif" font-size="22" font-style="italic" fill="#FFFFFF">life is simple.</text>
+</svg>

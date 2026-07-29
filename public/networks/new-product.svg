@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 220" fill="none">
+  <!-- PRODUCT banner (skewed parallelogram) -->
+  <path d="M150 78 L665 78 L630 178 L115 178 Z" fill="#2A2A2A"/>
+
+  <!-- NEW tag -->
+  <rect x="210" y="42" width="86" height="32" rx="3" fill="#E30613"/>
+  <text x="253" y="65" text-anchor="middle" font-family="Arial Black, Arial, Helvetica, sans-serif" font-size="18" font-weight="900" fill="#FFFFFF" letter-spacing="1.5">NEW</text>
+
+  <!-- PRODUCT text -->
+  <text x="370" y="148" text-anchor="middle" font-family="Arial Black, Arial, Helvetica, sans-serif" font-size="52" font-weight="900" fill="#FFFFFF" letter-spacing="4">PRODUCT</text>
+
+  <!-- Megaphone group -->
+  <g transform="translate(28 36) rotate(-28 70 70)">
+    <!-- Sound waves -->
+    <path d="M118 28 C132 40 132 62 118 74" stroke="#E30613" stroke-width="7" stroke-linecap="round" fill="none"/>
+    <path d="M134 16 C156 36 156 70 134 90" stroke="#E30613" stroke-width="7" stroke-linecap="round" fill="none"/>
+    <path d="M150 4 C180 30 180 82 150 108" stroke="#E30613" stroke-width="7" stroke-linecap="round" fill="none"/>
+
+    <!-- Bell -->
+    <path d="M78 30 L128 10 L128 110 L78 90 Z" fill="#E30613"/>
+    <path d="M122 18 L128 10 L128 110 L122 102 Z" fill="#FFFFFF" opacity="0.95"/>
+
+    <!-- Body -->
+    <rect x="42" y="48" width="42" height="28" rx="4" fill="#E30613"/>
+    <rect x="46" y="54" width="28" height="8" rx="2" fill="#FFFFFF" opacity="0.9"/>
+
+    <!-- Handle -->
+    <path d="M48 76 L28 112 L42 118 L58 82 Z" fill="#E30613"/>
+    <path d="M40 88 L32 108 L40 112 L48 92 Z" fill="#FFFFFF" opacity="0.85"/>
+
+    <!-- Mouthpiece -->
+    <circle cx="40" cy="62" r="10" fill="#E30613"/>
+    <circle cx="40" cy="62" r="5" fill="#FFFFFF"/>
+  </g>
+</svg>
