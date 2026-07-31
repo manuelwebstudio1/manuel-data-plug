@@ -20,7 +20,7 @@ import { BrandLogo } from "@/components/layout/brand-logo";
 
 const links = [
   { href: "/", label: "Home", icon: LayoutGrid },
-  { href: "/store", label: "Store Front", icon: ShoppingBag },
+  { href: "/storefront", label: "Store Front", icon: ShoppingBag },
   { href: "/orders", label: "Orders", icon: ClipboardList },
   { href: "/verify-payment", label: "Verify Payment", icon: ShieldCheck },
   { href: "/profile", label: "Profile", icon: UserRound },

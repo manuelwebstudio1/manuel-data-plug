@@ -4,7 +4,7 @@ import { BrandLogo } from "@/components/layout/brand-logo";
 
 const quickLinks = [
   { href: "/", label: "Home" },
-  { href: "/store", label: "Store Front" },
+  { href: "/storefront", label: "Store Front" },
   { href: "/orders", label: "My Orders" },
   { href: "/verify-payment", label: "Verify Payment" },
   { href: "/contact", label: "Contact" },

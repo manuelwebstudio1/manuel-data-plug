@@ -1,11 +1,12 @@
 "use client";
 
 import Link from "next/link";
+import { Suspense, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -21,8 +22,16 @@ const schema = z.object({
 
 type FormValues = z.infer<typeof schema>;
 
-export default function LoginPage() {
+function safeNextPath(next: string | null) {
+  if (!next || !next.startsWith("/") || next.startsWith("//")) return null;
+  return next;
+}
+
+function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const nextPath = safeNextPath(searchParams.get("next"));
+
   const {
     register,
     handleSubmit,
@@ -31,6 +40,12 @@ export default function LoginPage() {
     resolver: zodResolver(schema),
     defaultValues: { remember: true },
   });
+
+  useEffect(() => {
+    if (searchParams.get("reason") === "login-required") {
+      toast.message("Please log in to open Store Front");
+    }
+  }, [searchParams]);
 
   const onSubmit = async (values: FormValues) => {
     const email = values.emailOrPhone.trim();
@@ -61,11 +76,18 @@ export default function LoginPage() {
 
     toast.success("Welcome back");
 
+    if (nextPath) {
+      router.push(nextPath);
+      router.refresh();
+      return;
+    }
+
     if (role === "ADMIN" || role === "SUPER_ADMIN" || role === "STAFF") {
       router.push("/admin");
     } else {
-      router.push("/profile");
+      router.push("/storefront");
     }
+    router.refresh();
   };
 
   return (
@@ -141,5 +163,13 @@ export default function LoginPage() {
         </p>
       </Card>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="py-20 text-center text-sm text-slate-500">Loading…</div>}>
+      <LoginForm />
+    </Suspense>
   );
 }
