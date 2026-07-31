@@ -28,12 +28,14 @@ const steps = [
 ];
 
 const paymentMethods = [
-  { id: "mtn_momo" as const, label: "MTN Mobile Money", hint: "Instant" },
-  { id: "telecel_cash" as const, label: "Telecel Cash", hint: "Instant" },
-  { id: "at_money" as const, label: "AirtelTigo Money", hint: "Instant" },
+  { id: "mtn_momo" as const, label: "MTN Mobile Money", hint: "Moolre" },
+  { id: "telecel_cash" as const, label: "Telecel Cash", hint: "Moolre" },
+  { id: "at_money" as const, label: "AirtelTigo Money", hint: "Moolre" },
   { id: "bank" as const, label: "Bank Transfer", hint: "Manual verify" },
   { id: "manual" as const, label: "Manual Payment", hint: "Upload proof" },
 ];
+
+const moolreMethods = new Set(["mtn_momo", "telecel_cash", "at_money"]);
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -48,6 +50,9 @@ export default function CheckoutPage() {
   } = useCart();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [otpCode, setOtpCode] = useState("");
+  const [needsOtp, setNeedsOtp] = useState(false);
+  const [paymentRef, setPaymentRef] = useState<string | null>(null);
 
   if (!draft.package) {
     return (
@@ -80,12 +85,81 @@ export default function CheckoutPage() {
       setStep(1);
       return;
     }
+
+    // Manual / bank flow — keep existing verify-payment path
+    if (!moolreMethods.has(draft.paymentMethod)) {
+      setLoading(true);
+      await new Promise((r) => setTimeout(r, 800));
+      setLoading(false);
+      toast.success("Order placed — upload payment proof to verify");
+      reset();
+      router.push("/verify-payment");
+      return;
+    }
+
     setLoading(true);
-    await new Promise((r) => setTimeout(r, 1400));
-    setLoading(false);
-    toast.success("Order placed — awaiting payment confirmation");
-    reset();
-    router.push("/orders");
+    try {
+      const res = await fetch("/api/payments/moolre/initiate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          amount: total,
+          phone: draft.phone,
+          method: draft.paymentMethod,
+          packageName: pkg.name,
+          otpCode: otpCode.trim() || undefined,
+          externalRef: paymentRef || undefined,
+        }),
+      });
+
+      const data = (await res.json()) as {
+        ok?: boolean;
+        needsOtp?: boolean;
+        reference?: string;
+        message?: string;
+        error?: string;
+        code?: string;
+      };
+
+      if (!res.ok || !data.ok) {
+        if (data.code === "TP14" || data.needsOtp) {
+          setNeedsOtp(true);
+          if (data.reference) setPaymentRef(data.reference);
+          toast.message(
+            data.message ||
+              "Complete SMS verification, then enter the OTP below."
+          );
+          return;
+        }
+        toast.error(data.error || data.message || "Payment failed to start");
+        return;
+      }
+
+      if (data.reference) setPaymentRef(data.reference);
+
+      if (data.needsOtp) {
+        setNeedsOtp(true);
+        toast.message(
+          data.message ||
+            "Complete SMS verification, then enter the OTP and try again."
+        );
+        return;
+      }
+
+      toast.success(
+        data.message ||
+          "MoMo prompt sent — approve it on your phone to complete payment."
+      );
+      reset();
+      setOtpCode("");
+      setNeedsOtp(false);
+      setPaymentRef(null);
+      router.push("/orders");
+    } catch {
+      toast.error("Could not reach payment service. Try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -232,7 +306,8 @@ export default function CheckoutPage() {
                 </div>
                 <p className="mt-4 flex items-start gap-2 text-xs text-slate-500">
                   <Shield className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-                  Paystack, Flutterwave, Hubtel & ExpressPay coming soon.
+                  Mobile money is processed securely via Moolre. Approve the
+                  prompt on your phone to finish payment.
                 </p>
                 <div className="mt-6 flex gap-2">
                   <Button variant="secondary" onClick={() => setStep(2)}>
@@ -254,13 +329,44 @@ export default function CheckoutPage() {
                       ?.label
                   }
                   .
+                  {moolreMethods.has(draft.paymentMethod)
+                    ? " A USSD/MoMo approval prompt will be sent to the payer number."
+                    : " You will upload payment proof after placing the order."}
                 </p>
+
+                {needsOtp && moolreMethods.has(draft.paymentMethod) ? (
+                  <div className="mb-4">
+                    <Label htmlFor="moolre-otp">OTP from SMS</Label>
+                    <Input
+                      id="moolre-otp"
+                      placeholder="Enter OTP"
+                      value={otpCode}
+                      onChange={(e) => setOtpCode(e.target.value)}
+                    />
+                    <p className="mt-1 text-xs text-slate-500">
+                      Enter the code Moolre sent, then tap Pay again.
+                    </p>
+                  </div>
+                ) : null}
+
+                {paymentRef ? (
+                  <p className="mb-4 text-xs text-slate-500">
+                    Reference: <span className="font-mono">{paymentRef}</span>
+                  </p>
+                ) : null}
+
                 <div className="flex gap-2">
                   <Button variant="secondary" onClick={() => setStep(3)}>
                     Back
                   </Button>
                   <Button onClick={confirmOrder} disabled={loading}>
-                    {loading ? "Processing…" : "Confirm Order"}
+                    {loading
+                      ? "Processing…"
+                      : moolreMethods.has(draft.paymentMethod)
+                        ? needsOtp
+                          ? "Submit OTP & Pay"
+                          : "Pay with MoMo"
+                        : "Confirm Order"}
                   </Button>
                 </div>
               </motion.div>
