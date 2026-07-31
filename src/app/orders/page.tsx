@@ -161,7 +161,9 @@ export default function OrdersPage() {
           </table>
         </div>
         {rows.length === 0 && (
-          <div className="py-16 text-center text-slate-500">No orders found.</div>
+          <div className="py-16 text-center text-slate-500">
+            No orders yet. Your purchases will appear here.
+          </div>
         )}
         <div className="flex items-center justify-between border-t border-slate-100 px-4 py-3">
           <p className="text-xs text-slate-500">

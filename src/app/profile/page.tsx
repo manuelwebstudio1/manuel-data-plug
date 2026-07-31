@@ -18,7 +18,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { formatCurrency } from "@/lib/utils";
 
 const tabs = [
@@ -38,7 +37,7 @@ export default function ProfilePage() {
       <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-4">
           <div className="relative flex h-16 w-16 items-center justify-center rounded-2xl bg-[#0A2A66] text-2xl font-bold text-white shadow-lg">
-            M
+            U
             <button
               type="button"
               className="absolute -bottom-1 -right-1 rounded-full bg-white p-1 text-[10px] font-semibold text-[#0A2A66] shadow"
@@ -49,9 +48,11 @@ export default function ProfilePage() {
           </div>
           <div>
             <h1 className="font-[family-name:var(--font-poppins)] text-2xl font-bold text-[#0A2A66]">
-              Manuel Customer
+              My Profile
             </h1>
-            <p className="text-sm text-slate-500">@manuel · Profile 80% complete</p>
+            <p className="text-sm text-slate-500">
+              Complete your profile to get started
+            </p>
           </div>
         </div>
         <Button
@@ -89,25 +90,25 @@ export default function ProfilePage() {
           {[
             {
               label: "Wallet balance",
-              value: formatCurrency(125.5),
+              value: formatCurrency(0),
               icon: Wallet,
               color: "bg-sky-50 text-sky-600",
             },
             {
               label: "Referral earnings",
-              value: formatCurrency(48),
+              value: formatCurrency(0),
               icon: Gift,
               color: "bg-emerald-50 text-emerald-600",
             },
             {
               label: "Favourite bundles",
-              value: "4",
+              value: "0",
               icon: Heart,
               color: "bg-rose-50 text-rose-600",
             },
             {
               label: "Saved numbers",
-              value: "3",
+              value: "0",
               icon: Phone,
               color: "bg-orange-50 text-orange-600",
             },
@@ -133,30 +134,18 @@ export default function ProfilePage() {
               <Bell className="h-4 w-4 text-sky-500" />
               <h2 className="font-semibold">Recent activity</h2>
             </div>
-            <ul className="space-y-3 text-sm">
-              {[
-                "MTN 5GB delivered to 024****891",
-                "Payment verification pending · REF-882640",
-                "Promo MANUEL10 applied on checkout",
-              ].map((a) => (
-                <li
-                  key={a}
-                  className="flex items-center justify-between rounded-xl bg-slate-50 px-3 py-2.5"
-                >
-                  <span>{a}</span>
-                  <Badge variant="muted">Today</Badge>
-                </li>
-              ))}
-            </ul>
+            <p className="rounded-xl bg-slate-50 px-3 py-6 text-center text-sm text-slate-500">
+              No recent activity yet.
+            </p>
           </Card>
 
           <Card className="p-5 md:col-span-2">
             <h2 className="mb-4 font-semibold">Profile completion</h2>
             <div className="h-2 overflow-hidden rounded-full bg-slate-100">
-              <div className="h-full w-4/5 rounded-full bg-[#0A2A66]" />
+              <div className="h-full w-0 rounded-full bg-[#0A2A66]" />
             </div>
             <p className="mt-2 text-sm text-slate-500">
-              Add a profile photo and verify your phone to reach 100%.
+              Add your details, phone number, and photo to complete your profile.
             </p>
           </Card>
         </div>
@@ -171,15 +160,19 @@ export default function ProfilePage() {
           <div className="space-y-4">
             <div>
               <Label>Full name</Label>
-              <Input defaultValue="Manuel Customer" />
+              <Input placeholder="Enter your full name" defaultValue="" />
             </div>
             <div>
               <Label>Email</Label>
-              <Input defaultValue="manuel@example.com" />
+              <Input
+                type="email"
+                placeholder="Enter your email"
+                defaultValue=""
+              />
             </div>
             <div>
               <Label>Phone</Label>
-              <Input defaultValue="0240000000" />
+              <Input placeholder="Enter your phone number" defaultValue="" />
             </div>
             <Button onClick={() => toast.success("Profile updated")}>
               Save changes
@@ -217,20 +210,10 @@ export default function ProfilePage() {
       {tab === "Saved Numbers" && (
         <Card className="max-w-xl p-6">
           <h2 className="mb-4 font-semibold">Saved numbers</h2>
-          <ul className="space-y-2">
-            {["024****891", "020****442", "027****119"].map((n) => (
-              <li
-                key={n}
-                className="flex items-center justify-between rounded-xl bg-slate-50 px-4 py-3 text-sm"
-              >
-                <span className="font-medium">{n}</span>
-                <Button size="sm" variant="ghost">
-                  Remove
-                </Button>
-              </li>
-            ))}
-          </ul>
-          <div className="mt-4 flex gap-2">
+          <p className="mb-4 rounded-xl bg-slate-50 px-4 py-6 text-center text-sm text-slate-500">
+            No saved numbers yet.
+          </p>
+          <div className="flex gap-2">
             <Input placeholder="Add phone number" />
             <Button onClick={() => toast.success("Number saved")}>Add</Button>
           </div>
@@ -251,7 +234,7 @@ export default function ProfilePage() {
               className="mb-3 flex items-center justify-between rounded-xl bg-slate-50 px-4 py-3 text-sm"
             >
               <span>{item}</span>
-              <input type="checkbox" defaultChecked className="h-4 w-4" />
+              <input type="checkbox" className="h-4 w-4" />
             </label>
           ))}
           <Button onClick={() => toast.success("Preferences saved")}>
