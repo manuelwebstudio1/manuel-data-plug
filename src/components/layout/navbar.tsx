@@ -17,6 +17,7 @@ import {
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { BrandLogo } from "@/components/layout/brand-logo";
+import { supabase } from "@/lib/supabase/client";
 
 const links = [
   { href: "/", label: "Home", icon: LayoutGrid },
@@ -26,10 +27,37 @@ const links = [
   { href: "/profile", label: "Profile", icon: UserRound },
 ];
 
+const loginRequiredHrefs = new Set([
+  "/storefront",
+  "/orders",
+  "/verify-payment",
+  "/profile",
+]);
+
 export function Navbar() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [signedIn, setSignedIn] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+
+    supabase.auth.getSession().then(({ data }) => {
+      if (active) setSignedIn(Boolean(data.session));
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSignedIn(Boolean(session));
+    });
+
+    return () => {
+      active = false;
+      subscription.unsubscribe();
+    };
+  }, []);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);
@@ -69,10 +97,14 @@ export function Navbar() {
                 link.href === "/"
                   ? pathname === "/"
                   : pathname.startsWith(link.href);
+              const href =
+                !signedIn && loginRequiredHrefs.has(link.href)
+                  ? `/login?next=${encodeURIComponent(link.href)}&reason=login-required`
+                  : link.href;
               return (
                 <Link
                   key={link.href}
-                  href={link.href}
+                  href={href}
                   className={cn(
                     "relative px-3 py-2 text-sm font-medium transition-colors",
                     "after:absolute after:bottom-0 after:left-3 after:right-3 after:h-[2px] after:origin-left after:rounded-full after:bg-[#0A2A66] after:transition-transform after:duration-300 after:ease-out",
@@ -147,6 +179,10 @@ export function Navbar() {
                     link.href === "/"
                       ? pathname === "/"
                       : pathname.startsWith(link.href);
+                  const href =
+                    !signedIn && loginRequiredHrefs.has(link.href)
+                      ? `/login?next=${encodeURIComponent(link.href)}&reason=login-required`
+                      : link.href;
                   return (
                     <motion.div
                       key={link.href}
@@ -155,7 +191,7 @@ export function Navbar() {
                       transition={{ delay: 0.05 * i }}
                     >
                       <Link
-                        href={link.href}
+                        href={href}
                         className={cn(
                           "flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium transition",
                           active

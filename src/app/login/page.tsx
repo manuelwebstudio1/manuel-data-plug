@@ -43,7 +43,7 @@ function LoginForm() {
 
   useEffect(() => {
     if (searchParams.get("reason") === "login-required") {
-      toast.message("Please log in to open Store Front");
+      toast.message("Please log in first to access your storefront");
     }
   }, [searchParams]);
 

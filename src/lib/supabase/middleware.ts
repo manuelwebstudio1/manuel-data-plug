@@ -15,13 +15,27 @@ function isProtectedPath(pathname: string) {
   );
 }
 
+function loginRedirect(request: NextRequest, pathname: string, search: string) {
+  const redirectUrl = request.nextUrl.clone();
+  redirectUrl.pathname = "/login";
+  redirectUrl.search = "";
+  redirectUrl.searchParams.set("next", `${pathname}${search}`);
+  redirectUrl.searchParams.set("reason", "login-required");
+  return NextResponse.redirect(redirectUrl);
+}
+
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
 
+  const { pathname, search } = request.nextUrl;
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
+  // Fail closed: never allow protected pages without auth config.
   if (!url || !key) {
+    if (isProtectedPath(pathname)) {
+      return loginRedirect(request, pathname, search);
+    }
     return supabaseResponse;
   }
 
@@ -46,15 +60,8 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const { pathname, search } = request.nextUrl;
-
   if (!user && isProtectedPath(pathname)) {
-    const redirectUrl = request.nextUrl.clone();
-    redirectUrl.pathname = "/login";
-    redirectUrl.search = "";
-    redirectUrl.searchParams.set("next", `${pathname}${search}`);
-    redirectUrl.searchParams.set("reason", "login-required");
-    return NextResponse.redirect(redirectUrl);
+    return loginRedirect(request, pathname, search);
   }
 
   return supabaseResponse;
