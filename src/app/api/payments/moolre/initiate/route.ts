@@ -9,7 +9,10 @@ import { generateOrderId } from "@/lib/utils";
 
 const schema = z.object({
   amount: z.number().positive(),
+  /** MoMo wallet number that will pay (payer) */
   phone: z.string().min(9),
+  /** Optional: number that receives the data bundle */
+  recipientPhone: z.string().min(9).optional(),
   method: z.enum(["mtn_momo", "telecel_cash", "at_money"]),
   packageName: z.string().optional(),
   otpCode: z.string().optional(),
@@ -28,8 +31,15 @@ export async function POST(request: Request) {
       );
     }
 
-    const { amount, phone, method, packageName, otpCode, externalRef } =
-      parsed.data;
+    const {
+      amount,
+      phone,
+      recipientPhone,
+      method,
+      packageName,
+      otpCode,
+      externalRef,
+    } = parsed.data;
 
     if (!isMoolrePaymentMethod(method)) {
       return NextResponse.json(
@@ -39,13 +49,18 @@ export async function POST(request: Request) {
     }
 
     const reference = externalRef || generateOrderId();
+    const noteParts = [
+      packageName,
+      recipientPhone ? `to ${recipientPhone}` : null,
+      reference,
+    ].filter(Boolean);
 
     const result = await initiateMoolrePayment({
       amount,
       phone,
       method,
       externalRef: reference,
-      reference: packageName ? `${packageName} · ${reference}` : reference,
+      reference: noteParts.join(" · "),
       otpCode,
     });
 

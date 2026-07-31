@@ -21,7 +21,7 @@ import { Badge } from "@/components/ui/badge";
 
 const steps = [
   "Package",
-  "Number",
+  "Numbers",
   "Review",
   "Payment",
   "Confirm",
@@ -42,6 +42,7 @@ export default function CheckoutPage() {
   const {
     draft,
     setPhone,
+    setPayerPhone,
     setPaymentMethod,
     setPromoCode,
     applyPromo,
@@ -53,6 +54,7 @@ export default function CheckoutPage() {
   const [otpCode, setOtpCode] = useState("");
   const [needsOtp, setNeedsOtp] = useState(false);
   const [paymentRef, setPaymentRef] = useState<string | null>(null);
+  const [sameAsRecipient, setSameAsRecipient] = useState(true);
 
   if (!draft.package) {
     return (
@@ -81,10 +83,13 @@ export default function CheckoutPage() {
 
   const confirmOrder = async () => {
     if (!draft.phone || draft.phone.length < 10) {
-      toast.error("Enter a valid phone number");
+      toast.error("Enter the recipient phone number");
       setStep(1);
       return;
     }
+
+    const payer =
+      sameAsRecipient || !draft.payerPhone ? draft.phone : draft.payerPhone;
 
     // Manual / bank flow — keep existing verify-payment path
     if (!moolreMethods.has(draft.paymentMethod)) {
@@ -97,6 +102,12 @@ export default function CheckoutPage() {
       return;
     }
 
+    if (!payer || payer.length < 10) {
+      toast.error("Enter the MoMo number you are paying from");
+      setStep(1);
+      return;
+    }
+
     setLoading(true);
     try {
       const res = await fetch("/api/payments/moolre/initiate", {
@@ -104,7 +115,8 @@ export default function CheckoutPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           amount: total,
-          phone: draft.phone,
+          phone: payer,
+          recipientPhone: draft.phone,
           method: draft.paymentMethod,
           packageName: pkg.name,
           otpCode: otpCode.trim() || undefined,
@@ -218,18 +230,59 @@ export default function CheckoutPage() {
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
                 <div className="mb-4 flex items-center gap-2">
                   <Smartphone className="h-5 w-5 text-sky-500" />
-                  <h2 className="text-lg font-semibold">Recipient number</h2>
+                  <h2 className="text-lg font-semibold">Phone numbers</h2>
                 </div>
-                <Label htmlFor="phone">Phone number</Label>
-                <Input
-                  id="phone"
-                  placeholder="e.g. 024XXXXXXX"
-                  value={draft.phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                />
-                <p className="mt-2 text-xs text-slate-500">
-                  Enter the number that should receive the data bundle.
-                </p>
+
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="phone">Recipient number</Label>
+                    <Input
+                      id="phone"
+                      placeholder="e.g. 024XXXXXXX"
+                      value={draft.phone}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        setPhone(value);
+                        if (sameAsRecipient) setPayerPhone(value);
+                      }}
+                    />
+                    <p className="mt-1 text-xs text-slate-500">
+                      Number that will receive the data bundle.
+                    </p>
+                  </div>
+
+                  <label className="flex items-center gap-2 text-sm text-slate-600">
+                    <input
+                      type="checkbox"
+                      className="rounded"
+                      checked={sameAsRecipient}
+                      onChange={(e) => {
+                        const checked = e.target.checked;
+                        setSameAsRecipient(checked);
+                        if (checked) setPayerPhone(draft.phone);
+                      }}
+                    />
+                    Paying from the same number
+                  </label>
+
+                  {!sameAsRecipient ? (
+                    <div>
+                      <Label htmlFor="payerPhone">
+                        Paying from (MoMo number)
+                      </Label>
+                      <Input
+                        id="payerPhone"
+                        placeholder="e.g. 020XXXXXXX"
+                        value={draft.payerPhone}
+                        onChange={(e) => setPayerPhone(e.target.value)}
+                      />
+                      <p className="mt-1 text-xs text-slate-500">
+                        MoMo wallet number that will approve and pay.
+                      </p>
+                    </div>
+                  ) : null}
+                </div>
+
                 <div className="mt-6 flex gap-2">
                   <Button variant="secondary" onClick={() => setStep(0)}>
                     Back
@@ -237,9 +290,17 @@ export default function CheckoutPage() {
                   <Button
                     onClick={() => {
                       if (draft.phone.length < 10) {
-                        toast.error("Enter a valid phone number");
+                        toast.error("Enter a valid recipient number");
                         return;
                       }
+                      if (
+                        !sameAsRecipient &&
+                        draft.payerPhone.replace(/\D/g, "").length < 10
+                      ) {
+                        toast.error("Enter the MoMo number you are paying from");
+                        return;
+                      }
+                      if (sameAsRecipient) setPayerPhone(draft.phone);
                       setStep(2);
                     }}
                   >
@@ -261,9 +322,17 @@ export default function CheckoutPage() {
                     <dt className="text-slate-500">Network</dt>
                     <dd className="font-medium">{pkg.network}</dd>
                   </div>
-                  <div className="flex justify-between">
-                    <dt className="text-slate-500">Phone</dt>
+                  <div className="flex justify-between gap-4">
+                    <dt className="text-slate-500">Recipient</dt>
                     <dd className="font-medium">{draft.phone}</dd>
+                  </div>
+                  <div className="flex justify-between gap-4">
+                    <dt className="text-slate-500">Paying from</dt>
+                    <dd className="font-medium">
+                      {sameAsRecipient || !draft.payerPhone
+                        ? draft.phone
+                        : draft.payerPhone}
+                    </dd>
                   </div>
                   <div className="flex justify-between">
                     <dt className="text-slate-500">Amount</dt>
@@ -330,7 +399,11 @@ export default function CheckoutPage() {
                   }
                   .
                   {moolreMethods.has(draft.paymentMethod)
-                    ? " A USSD/MoMo approval prompt will be sent to the payer number."
+                    ? ` A MoMo prompt will be sent to ${
+                        sameAsRecipient || !draft.payerPhone
+                          ? draft.phone
+                          : draft.payerPhone
+                      }. Data goes to ${draft.phone}.`
                     : " You will upload payment proof after placing the order."}
                 </p>
 
